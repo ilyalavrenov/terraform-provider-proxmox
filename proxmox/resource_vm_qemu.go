@@ -483,6 +483,11 @@ func resourceVmQemu() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"vmid": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  0,
+			},
 		},
 	}
 }
@@ -568,10 +573,16 @@ func resourceVmQemuCreate(d *schema.ResourceData, meta interface{}) error {
 	if vmr == nil {
 		// get unique id
 		nextid, err := nextVmId(pconf)
-		if err != nil {
-			pmParallelEnd(pconf)
-			return err
+		vmID := d.Get("vmid").(int)
+		if vmID != 0 {
+			nextid = vmID
+		} else {
+			if err != nil {
+				pmParallelEnd(pconf)
+				return err
+			}
 		}
+
 		vmr = pxapi.NewVmRef(nextid)
 
 		// set target node and pool
